@@ -3,7 +3,13 @@ package com.xxm.simple;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.QueueingConsumer;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
@@ -13,28 +19,54 @@ import java.util.concurrent.TimeoutException;
  * @desc
  * @date 2019/10/28 23:32
  **/
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = {"classpath:spring-test.xml"})
 public class Consumer {
-    public static void main(String[] args) throws IOException, TimeoutException {
-        ConnectionFactory connectionFactory = new ConnectionFactory();
 
-        connectionFactory.setHost("192.168.1.11");
-        connectionFactory.setPort(5672);
+    @Value("${host}")
+    private String host;
 
-        connectionFactory.setVirtualHost("/codingxxm");
-        connectionFactory.setUsername("scott");
-        connectionFactory.setPassword("tiger");
+    @Value("${post}")
+    private int port;
 
+    @Value("${virtual.host}")
+    private String virtualHost;
+
+    @Value("${username}")
+    private String username;
+
+    @Value("${password}")
+    private String password;
+
+    ConnectionFactory connectionFactory = new ConnectionFactory();
+
+    @Before
+    public void init() {
+        connectionFactory.setHost(host);
+        connectionFactory.setPort(port);
+
+        connectionFactory.setVirtualHost(virtualHost);
+        connectionFactory.setUsername(username);
+        connectionFactory.setPassword(password);
+    }
+
+    @Test
+    public void test() throws IOException, TimeoutException, InterruptedException {
         Connection connection = connectionFactory.newConnection();
         Channel channel = connection.createChannel();
+        String exchangeType = "direct";
 
+        //声明一个队列
         String queueName = "test-queue-1";
-        channel.queueDeclare(queueName, true, false, true, null);
+        channel.queueDeclare(queueName, true, false, false, null);
 
-        DefaultConsumer defaultConsumer = new DefaultConsumer(channel);
-        channel.basicConsume(queueName, true, defaultConsumer);
+        QueueingConsumer queueingConsumer = new QueueingConsumer(channel);
+        channel.basicConsume(queueName, true, queueingConsumer);
 
         while (true) {
-
+            QueueingConsumer.Delivery delivery = queueingConsumer.nextDelivery();
+            System.out.println("消费：" + new String(delivery.getBody()));
         }
     }
+
 }

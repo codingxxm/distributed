@@ -1,4 +1,4 @@
-package com.xxm.simple;
+package com.xxm.fanout;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -37,6 +37,10 @@ public class Producter {
     @Value("${password}")
     private String password;
 
+    @Value("${fanout.exchange}")
+    private String exchangeName;
+
+
     ConnectionFactory connectionFactory = new ConnectionFactory();
 
     @Before
@@ -54,10 +58,10 @@ public class Producter {
         Connection connection = connectionFactory.newConnection();
         Channel channel = connection.createChannel();
 
-        String queueName = "test-queue-1";
+        //不需要routingKey，exchange会进行路由，发送到绑定的队列上
         for (int i = 0; i < 5; i++) {
-            String message = "test msg " + i;
-            channel.basicPublish("",queueName, null, message.getBytes());
+            String message = "test fanout msg " + i;
+            channel.basicPublish(exchangeName, "", null, message.getBytes());
         }
 
         channel.close();

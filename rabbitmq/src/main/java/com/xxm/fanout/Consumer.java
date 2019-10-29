@@ -1,8 +1,9 @@
-package com.xxm.simple;
+package com.xxm.fanout;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.QueueingConsumer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,7 +21,7 @@ import java.util.concurrent.TimeoutException;
  **/
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = {"classpath:spring-test.xml"})
-public class Producter {
+public class Consumer {
 
     @Value("${host}")
     private String host;
@@ -37,6 +38,10 @@ public class Producter {
     @Value("${password}")
     private String password;
 
+    @Value("${fanout.exchange}")
+    private String exchangeName;
+
+
     ConnectionFactory connectionFactory = new ConnectionFactory();
 
     @Before
@@ -50,18 +55,28 @@ public class Producter {
     }
 
     @Test
-    public void test() throws IOException, TimeoutException {
+    public void test() throws IOException, TimeoutException, InterruptedException {
         Connection connection = connectionFactory.newConnection();
         Channel channel = connection.createChannel();
+        String exchangeType = "fanout";
+        //声明一个交换机
+        //名称，类型，持久化，是否自动删除，其他参数
+        channel.exchangeDeclare(exchangeName, exchangeType, true, false, null);
 
-        String queueName = "test-queue-1";
-        for (int i = 0; i < 5; i++) {
-            String message = "test msg " + i;
-            channel.basicPublish("",queueName, null, message.getBytes());
+        //声明一个队列
+        String queueName = "fanout-queue";
+        channel.queueDeclare(queueName, true, false, false, null);
+
+        //队列和交换机绑定
+        channel.queueBind(queueName, exchangeName, "");
+
+        QueueingConsumer queueingConsumer = new QueueingConsumer(channel);
+        channel.basicConsume(queueName, true, queueingConsumer);
+
+        while (true) {
+            QueueingConsumer.Delivery delivery = queueingConsumer.nextDelivery();
+            System.out.println("消费：" + new String(delivery.getBody()));
         }
-
-        channel.close();
-        connection.close();
     }
 
 }

@@ -1,4 +1,4 @@
-package com.xxm.simple;
+package com.xxm.topic;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -37,6 +37,12 @@ public class Producter {
     @Value("${password}")
     private String password;
 
+    @Value("${topic.exchange}")
+    private String exchangeName;
+
+    @Value("${topic.routingkey}")
+    private String routingKey;
+
     ConnectionFactory connectionFactory = new ConnectionFactory();
 
     @Before
@@ -54,10 +60,11 @@ public class Producter {
         Connection connection = connectionFactory.newConnection();
         Channel channel = connection.createChannel();
 
-        String queueName = "test-queue-1";
+        //使用topic routingKey来发送消息，根据routingKey,exchange会进行路由，发送到真正的queue里
+        //每次的routingkey都不一样，但是符合topic exchange的规则，所有都会被投递成功
         for (int i = 0; i < 5; i++) {
-            String message = "test msg " + i;
-            channel.basicPublish("",queueName, null, message.getBytes());
+            String message = "test topic exchange " + i;
+            channel.basicPublish(exchangeName, routingKey + "." + i, null, message.getBytes());
         }
 
         channel.close();
