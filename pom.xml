@@ -8,6 +8,7 @@
         <module>rediscli</module>
         <module>juc</module>
         <module>rabbitmq</module>
+        <module>rabbit-tx-producter</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>

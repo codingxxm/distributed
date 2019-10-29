@@ -1,5 +1,6 @@
 /.idea/
-/juc/target/classes/
-/rabbitmq/target/classes/
-/rediscli/target/classes/
-/zkcli/target/classes/com/xxm/
+/juc/target/
+/rabbitmq/target/
+/rediscli/target/
+/zkcli/target/
+*.iml

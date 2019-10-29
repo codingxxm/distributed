@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    dynamic:
+      datasource:
+        primary: master
+        master:
+          username:
