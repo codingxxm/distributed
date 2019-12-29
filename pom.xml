@@ -9,6 +9,8 @@
         <module>juc</module>
         <module>rabbitmq</module>
         <module>rabbit-tx-producter</module>
+        <module>springwithrabbitmq</module>
+        <module>netty</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
